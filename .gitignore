@@ -1,0 +1,16 @@
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+data/chroma_db/
+data/sqlite/
+data/cache/
+data/processed/
+*.log
+.DS_Store
+Thumbs.db
