@@ -23,7 +23,7 @@ class TextChunker:
         self.min_chunk_size = min_chunk_size or settings.min_chunk_size
 
     def chunk(self, document: LoadedDocument) -> list[DocumentChunk]:
-        paragraphs = [p.strip() for p in document.content.split("\n\n") if p.strip()]
+        paragraphs = self._sections(document.content) if document.file_type == "markdown" else [p.strip() for p in document.content.split("\n\n") if p.strip()]
         chunks: list[str] = []
         current = ""
         for paragraph in paragraphs:
@@ -57,3 +57,22 @@ class TextChunker:
             if chunk:
                 chunks.append(chunk)
         return chunks
+
+    def _sections(self, text: str) -> list[str]:
+        sections: list[str] = []
+        current: list[str] = []
+        for line in text.splitlines():
+            if line.startswith("#") and current:
+                sections.append("\n".join(current).strip())
+                current = [line]
+            else:
+                current.append(line)
+        if current:
+            sections.append("\n".join(current).strip())
+        refined: list[str] = []
+        for section in sections:
+            if len(section) <= self.chunk_size:
+                refined.append(section)
+            else:
+                refined.extend([p.strip() for p in section.split("\n\n") if p.strip()])
+        return refined

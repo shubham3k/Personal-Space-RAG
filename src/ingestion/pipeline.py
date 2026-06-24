@@ -7,7 +7,8 @@ from config.settings import settings
 from src.ingestion.chunker import TextChunker
 from src.ingestion.embedder import LocalEmbedder
 from src.ingestion.loaders import DEFAULT_LOADERS
-from src.ingestion.loaders.base_loader import LoadedDocument
+from src.storage.bm25_store import BM25Store
+from src.storage.cache import QueryCache
 from src.storage.metadata_store import MetadataStore
 from src.storage.vector_store import VectorStore
 from src.utils.file_utils import is_supported_file, validate_file
@@ -21,11 +22,15 @@ class IngestionPipeline:
         metadata_store: MetadataStore | None = None,
         embedder: LocalEmbedder | None = None,
         chunker: TextChunker | None = None,
+        bm25_store: BM25Store | None = None,
+        query_cache: QueryCache | None = None,
     ):
         self.vector_store = vector_store or VectorStore()
         self.metadata_store = metadata_store or MetadataStore()
         self.embedder = embedder or LocalEmbedder()
         self.chunker = chunker or TextChunker()
+        self.bm25_store = bm25_store or BM25Store()
+        self.query_cache = query_cache or QueryCache()
         self.loaders = DEFAULT_LOADERS
 
     def ingest_file(self, file_path: str | Path) -> dict:
@@ -33,13 +38,20 @@ class IngestionPipeline:
         validate_file(path)
         loader = self._loader_for(path)
         document = loader.load(path)
+        document.metadata.setdefault("source", "local_file")
+        document.metadata.setdefault("source_path", str(path))
         document.content = truncate_chars(document.content, MAX_DOCUMENT_CHARS)
         if self.metadata_store.has_file_hash(document.file_hash):
+            chunks = self.chunker.chunk(document)
+            self.bm25_store.add_chunks(chunks)
+            self.query_cache.invalidate_all()
             return {"status": "skipped", "reason": "duplicate", "path": str(path)}
         chunks = self.chunker.chunk(document)
         embeddings = self.embedder.embed_texts([chunk.content for chunk in chunks])
         self.vector_store.add_chunks(chunks, embeddings)
+        self.bm25_store.add_chunks(chunks)
         self.metadata_store.upsert_document(document, len(chunks))
+        self.query_cache.invalidate_all()
         return {"status": "ingested", "path": str(path), "chunks": len(chunks)}
 
     def ingest_directory(self, directory: str | Path | None = None) -> dict:
