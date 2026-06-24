@@ -11,3 +11,13 @@ class QueryProcessor:
         if len(normalized) > MAX_QUERY_LENGTH:
             raise ValueError("Query is too long.")
         return normalized
+
+    def expand(self, query: str) -> list[str]:
+        normalized = self.normalize(query)
+        expansions = [normalized]
+        lowered = normalized.lower()
+        if "image" in lowered or "photo" in lowered or "screenshot" in lowered:
+            expansions.append(f"{normalized} OCR visible text image description")
+        if "audio" in lowered or "voice" in lowered or "recording" in lowered:
+            expansions.append(f"{normalized} transcript spoken audio")
+        return expansions
