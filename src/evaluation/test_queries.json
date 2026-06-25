@@ -1,0 +1,6 @@
+[
+  {
+    "query": "What documents are available in my knowledge base?",
+    "expected_answer": "A grounded answer citing indexed documents."
+  }
+]
