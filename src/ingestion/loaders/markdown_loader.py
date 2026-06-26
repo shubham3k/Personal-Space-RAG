@@ -24,7 +24,11 @@ class MarkdownLoader(BaseLoader):
         if self._is_binary(file_path):
             raise LoaderError(f"File appears binary: {file_path}")
 
-        raw_text = file_path.read_text(encoding=self._detect_encoding(file_path))
+        encoding = self._detect_encoding(file_path)
+        try:
+            raw_text = file_path.read_text(encoding=encoding)
+        except Exception:
+            raw_text = file_path.read_text(encoding=encoding, errors="replace")
         metadata: dict = {}
         content = raw_text
         try:

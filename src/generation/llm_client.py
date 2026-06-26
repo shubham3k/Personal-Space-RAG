@@ -1,11 +1,57 @@
 """Smart LLM client with provider fallback."""
 
 import asyncio
+import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from enum import StrEnum
 from typing import AsyncGenerator
 
 from config.settings import settings
+from src.orchestrator.rate_limiter import RateLimiter
+
+
+class ProviderStatus(StrEnum):
+    HEALTHY = "healthy"
+    DEGRADED = "degraded"
+    DOWN = "down"
+
+
+class CircuitBreaker:
+    def __init__(self, max_failures: int = 3, cooldown_base: float = 60.0):
+        self.max_failures = max_failures
+        self.cooldown_base = cooldown_base
+        self.failure_count = 0
+        self.last_failure = 0.0
+        self.status = ProviderStatus.HEALTHY
+
+    @property
+    def cooldown_remaining(self) -> float:
+        if self.status != ProviderStatus.DOWN:
+            return 0.0
+        cooldown = self.cooldown_base * (2 ** max(0, self.failure_count - self.max_failures))
+        elapsed = time.time() - self.last_failure
+        return max(0.0, cooldown - elapsed)
+
+    def record_success(self) -> None:
+        self.failure_count = 0
+        self.status = ProviderStatus.HEALTHY
+
+    def record_failure(self) -> None:
+        self.failure_count += 1
+        self.last_failure = time.time()
+        if self.failure_count >= self.max_failures:
+            self.status = ProviderStatus.DOWN
+
+    def should_attempt(self) -> bool:
+        if self.status == ProviderStatus.HEALTHY:
+            return True
+        if self.status == ProviderStatus.DOWN:
+            if self.cooldown_remaining <= 0.0:
+                self.status = ProviderStatus.DEGRADED
+                return True
+            return False
+        return True
 
 
 @dataclass
@@ -63,6 +109,8 @@ class LLMClient:
     def __init__(self, providers: list[BaseLLMProvider] | None = None):
         self.providers = providers if providers is not None else self._build_providers()
         self._unavailable: set[str] = set()
+        self.rate_limiter = RateLimiter()
+        self.circuit_breakers = {p.name: CircuitBreaker() for p in self.providers}
 
     def _build_providers(self) -> list[BaseLLMProvider]:
         providers: list[BaseLLMProvider] = []
@@ -88,9 +136,17 @@ class LLMClient:
     async def generate(self, system: str, user: str, max_tokens: int | None = None, temperature: float | None = None) -> LLMResponse:
         errors: dict[str, str] = {}
         for provider in self.providers:
+            cb = self.circuit_breakers.get(provider.name)
+            if cb and not cb.should_attempt():
+                errors[provider.name] = f"Circuit breaker open ({cb.cooldown_remaining:.0f}s remaining)"
+                continue
             if provider.name in self._unavailable:
                 continue
+            if not self.rate_limiter.can_use(provider.name):
+                errors[provider.name] = "Daily rate limit reached"
+                continue
             try:
+                await self.rate_limiter.acquire(provider.name)
                 response = await provider.generate(
                     system=system,
                     user=user,
@@ -99,16 +155,24 @@ class LLMClient:
                 )
                 if not response.content.strip():
                     raise ProviderConnectionError("Provider returned empty content")
+                if cb:
+                    cb.record_success()
                 return response
             except RateLimitError as exc:
                 errors[provider.name] = str(exc)
+                if cb:
+                    cb.record_failure()
                 continue
             except (ProviderConnectionError, ProviderTimeoutError) as exc:
                 errors[provider.name] = str(exc)
+                if cb:
+                    cb.record_failure()
                 await asyncio.sleep(0.2)
                 continue
             except Exception as exc:
                 errors[provider.name] = str(exc)
+                if cb:
+                    cb.record_failure()
                 continue
         raise AllProvidersFailedError(errors or {"providers": "No configured provider is available"})
 

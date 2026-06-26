@@ -28,8 +28,37 @@ class PDFLoader(BaseLoader):
                 page_count = doc.page_count
                 for page in doc:
                     pages.append(page.get_text())
+            content_text = "\n\n".join(pages).strip()
+
+            # Fallback to OCR if there's very little extractable text
+            if len(content_text) < 100:
+                try:
+                    from src.ingestion.processors.ocr_engine import OCREngine
+                    import tempfile
+                    
+                    ocr = OCREngine()
+                    ocr_text_parts = []
+                    with fitz.open(file_path) as doc:
+                        for page in doc:
+                            # Render page to image at 150 DPI
+                            pix = page.get_pixmap(matrix=fitz.Matrix(150/72, 150/72))
+                            with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmp:
+                                tmp_path = Path(tmp.name)
+                            try:
+                                pix.save(str(tmp_path))
+                                ocr_res = ocr.extract_text(tmp_path)
+                                if ocr_res.get("text"):
+                                    ocr_text_parts.append(ocr_res["text"])
+                            finally:
+                                if tmp_path.exists():
+                                    tmp_path.unlink()
+                    if ocr_text_parts:
+                        content_text = "\n\n".join(ocr_text_parts)
+                except Exception:
+                    pass
+
             tables = self.table_extractor.extract_tables(file_path)
-            content = clean_text("\n\n".join(pages + tables))
+            content = clean_text(content_text + "\n\n" + "\n\n".join(tables))
         except Exception as exc:
             raise LoaderError(f"Could not load PDF {file_path}: {exc}") from exc
         if not content:

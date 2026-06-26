@@ -50,12 +50,50 @@ class TextChunker:
     def _split_long(self, text: str) -> list[str]:
         if len(text) <= self.chunk_size:
             return [text]
+        import re
+        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()]
+        if not sentences:
+            return []
+        
         chunks = []
-        step = max(1, self.chunk_size - self.chunk_overlap)
-        for start in range(0, len(text), step):
-            chunk = text[start : start + self.chunk_size].strip()
-            if chunk:
-                chunks.append(chunk)
+        current_chunk = []
+        current_len = 0
+        
+        for sentence in sentences:
+            sentence_len = len(sentence)
+            if sentence_len > self.chunk_size:
+                # If a single sentence exceeds the chunk size, we must force-split it by character slicing.
+                if current_chunk:
+                    chunks.append(" ".join(current_chunk))
+                    current_chunk = []
+                    current_len = 0
+                step = max(1, self.chunk_size - self.chunk_overlap)
+                for start in range(0, sentence_len, step):
+                    chunk = sentence[start : start + self.chunk_size].strip()
+                    if chunk:
+                        chunks.append(chunk)
+                continue
+            
+            if current_len + sentence_len + (1 if current_chunk else 0) <= self.chunk_size:
+                current_chunk.append(sentence)
+                current_len += sentence_len + (1 if len(current_chunk) > 1 else 0)
+            else:
+                if current_chunk:
+                    chunks.append(" ".join(current_chunk))
+                # Add sentences to current_chunk to satisfy overlap
+                overlap_chunk = []
+                overlap_len = 0
+                for s in reversed(current_chunk):
+                    if overlap_len + len(s) + (1 if overlap_chunk else 0) <= self.chunk_overlap:
+                        overlap_chunk.insert(0, s)
+                        overlap_len += len(s) + (1 if len(overlap_chunk) > 1 else 0)
+                    else:
+                        break
+                current_chunk = overlap_chunk + [sentence]
+                current_len = sum(len(s) for s in current_chunk) + (len(current_chunk) - 1)
+        
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
         return chunks
 
     def _sections(self, text: str) -> list[str]:

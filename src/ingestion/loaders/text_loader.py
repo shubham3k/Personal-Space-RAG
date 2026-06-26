@@ -19,7 +19,12 @@ class TextLoader(BaseLoader):
             raise FileNotFoundError(file_path)
         if self._is_binary(file_path):
             raise LoaderError(f"File appears binary: {file_path}")
-        content = clean_text(file_path.read_text(encoding=self._detect_encoding(file_path)))
+        encoding = self._detect_encoding(file_path)
+        try:
+            content_raw = file_path.read_text(encoding=encoding)
+        except Exception:
+            content_raw = file_path.read_text(encoding=encoding, errors="replace")
+        content = clean_text(content_raw)
         if not content:
             raise LoaderError(f"File has no content: {file_path}")
         date = extract_date_from_filename(file_path.name) or datetime.fromtimestamp(file_path.stat().st_mtime).strftime("%Y-%m-%d")

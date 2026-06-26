@@ -21,7 +21,10 @@ class PromptBuilder:
             metadata = item.get("metadata", {})
             source = metadata.get("source_path", "unknown")
             title = metadata.get("title", "Untitled")
-            block = f"[{idx}] {title}\nSource: {source}\n{item.get('content', '')}"
+            media_type = metadata.get("media_type", metadata.get("type", "text"))
+            preview = metadata.get("thumbnail_path") or metadata.get("transcript_path") or ""
+            preview_line = f"\nPreview: {preview}" if preview else ""
+            block = f"[{idx}] {title}\nType: {media_type}\nSource: {source}{preview_line}\n{item.get('content', '')}"
             tokens = count_tokens(block)
             if used + tokens > budget:
                 break

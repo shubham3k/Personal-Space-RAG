@@ -36,7 +36,36 @@ class BaseLoader(ABC):
         return file_path.suffix.lower() in self.supported_extensions
 
     def _detect_encoding(self, file_path: Path) -> str:
-        for encoding in ("utf-8", "utf-8-sig", "latin-1", "cp1252"):
+        # Try UTF-8 first
+        try:
+            file_path.read_text(encoding="utf-8")
+            return "utf-8"
+        except UnicodeDecodeError:
+            pass
+        # Try UTF-8-sig
+        try:
+            file_path.read_text(encoding="utf-8-sig")
+            return "utf-8-sig"
+        except UnicodeDecodeError:
+            pass
+        # Try dynamic detection
+        try:
+            import charset_normalizer
+            raw = file_path.read_bytes()
+            result = charset_normalizer.detect(raw)
+            if result and result.get("encoding"):
+                return result["encoding"]
+        except ImportError:
+            try:
+                import chardet
+                raw = file_path.read_bytes()
+                result = chardet.detect(raw)
+                if result and result.get("encoding"):
+                    return result["encoding"]
+            except ImportError:
+                pass
+        # Fallbacks (checking cp1252 before latin-1)
+        for encoding in ("cp1252", "latin-1"):
             try:
                 file_path.read_text(encoding=encoding)
                 return encoding

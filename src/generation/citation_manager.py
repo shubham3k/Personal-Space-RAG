@@ -10,6 +10,9 @@ def sources_from_context(contexts: list[dict]) -> list[dict]:
                 "number": idx,
                 "title": metadata.get("title", "Untitled"),
                 "source_path": metadata.get("source_path", ""),
+                "media_type": metadata.get("media_type", metadata.get("type", "text")),
+                "thumbnail_path": metadata.get("thumbnail_path", ""),
+                "transcript_path": metadata.get("transcript_path", ""),
                 "score": item.get("score", 0),
             }
         )

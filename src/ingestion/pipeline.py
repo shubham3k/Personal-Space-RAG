@@ -33,6 +33,14 @@ class IngestionPipeline:
         self.query_cache = query_cache or QueryCache()
         self.loaders = DEFAULT_LOADERS
 
+    def delete_by_source_path(self, source_path: str) -> None:
+        if hasattr(self.vector_store, "delete_by_source_path"):
+            self.vector_store.delete_by_source_path(source_path)
+        if hasattr(self.bm25_store, "delete_by_source_path"):
+            self.bm25_store.delete_by_source_path(source_path)
+        if hasattr(self.metadata_store, "delete_by_source_path"):
+            self.metadata_store.delete_by_source_path(source_path)
+
     def ingest_file(self, file_path: str | Path) -> dict:
         path = Path(file_path)
         validate_file(path)
@@ -42,10 +50,8 @@ class IngestionPipeline:
         document.metadata.setdefault("source_path", str(path))
         document.content = truncate_chars(document.content, MAX_DOCUMENT_CHARS)
         if self.metadata_store.has_file_hash(document.file_hash):
-            chunks = self.chunker.chunk(document)
-            self.bm25_store.add_chunks(chunks)
-            self.query_cache.invalidate_all()
             return {"status": "skipped", "reason": "duplicate", "path": str(path)}
+        self.delete_by_source_path(str(path))
         chunks = self.chunker.chunk(document)
         embeddings = self.embedder.embed_texts([chunk.content for chunk in chunks])
         self.vector_store.add_chunks(chunks, embeddings)
