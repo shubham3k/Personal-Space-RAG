@@ -11,6 +11,10 @@ data/chroma_db/
 data/sqlite/
 data/cache/
 data/processed/
+data/raw/
 *.log
 .DS_Store
 Thumbs.db
+
+web-ui/node_modules/
+web-ui/dist/
