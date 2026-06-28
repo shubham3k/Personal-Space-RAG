@@ -1,8 +1,8 @@
 """Run ingestion for a file or directory."""
 
-from pathlib import Path
-import sys
 import argparse
+import sys
+from pathlib import Path
 
 # Ensure project root is on sys.path so top-level imports like `config` resolve
 # when running the script directly (e.g. `python scripts/run_ingestion.py`).
@@ -10,8 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from config.settings import settings
-from src.ingestion.pipeline import IngestionPipeline
+from config.settings import settings  # noqa: E402
+from src.ingestion.pipeline import IngestionPipeline  # noqa: E402
 
 
 def main() -> None:
@@ -23,16 +23,13 @@ def main() -> None:
     path = Path(args.path)
 
     if args.force:
-        # Remove metadata rows for the target files so ingestion will run again.
-        from src.storage.metadata_store import MetadataStore
-
-        m = MetadataStore()
+        # Remove old chunks/metadata for the target files so ingestion will run again.
         if path.is_dir():
             for p in path.rglob("*"):
                 if p.is_file():
-                    m.delete_by_source_path(str(p))
+                    pipeline.delete_by_source_path(str(p))
         else:
-            m.delete_by_source_path(str(path))
+            pipeline.delete_by_source_path(str(path))
 
     print(pipeline.ingest_directory(path) if path.is_dir() else pipeline.ingest_file(path))
 
