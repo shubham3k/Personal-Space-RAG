@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api.middleware.error_handler import register_error_handlers
-from api.routes import conversations, documents, health, ingest, query
+from api.routes import conversations, documents, health, ingest, query, v3
 from config.logging_config import configure_logging
 from config.settings import settings
 from src.utils.file_utils import check_disk_space
@@ -26,6 +26,7 @@ app.include_router(query.router)
 app.include_router(ingest.router)
 app.include_router(documents.router)
 app.include_router(conversations.router)
+app.include_router(v3.router)
 
 
 @app.on_event("startup")
@@ -35,6 +36,17 @@ async def startup() -> None:
         import structlog
 
         structlog.get_logger().warning("Low disk space: less than 1GB available")
+    
+    if settings.watch_enabled:
+        from src.ingestion.file_watcher import start_watcher
+        app.state.watcher = start_watcher()
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    if hasattr(app.state, "watcher"):
+        app.state.watcher.stop()
+        app.state.watcher.join()
 
 
 @app.get("/")

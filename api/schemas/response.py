@@ -7,6 +7,9 @@ class Source(BaseModel):
     number: int
     title: str
     source_path: str
+    media_type: str | None = None
+    thumbnail_path: str | None = None
+    transcript_path: str | None = None
     score: float
 
 
