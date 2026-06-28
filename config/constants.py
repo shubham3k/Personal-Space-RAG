@@ -1,12 +1,17 @@
 """Application-wide constants."""
 
-SUPPORTED_EXTENSIONS = {".md", ".markdown", ".txt", ".pdf", ".json", ".csv"}
+SUPPORTED_TEXT_EXTENSIONS = {".md", ".markdown", ".txt", ".pdf", ".json", ".csv"}
+SUPPORTED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".tiff"}
+SUPPORTED_AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".ogg", ".flac", ".wma", ".aac"}
+SUPPORTED_EXTENSIONS = SUPPORTED_TEXT_EXTENSIONS | SUPPORTED_IMAGE_EXTENSIONS | SUPPORTED_AUDIO_EXTENSIONS
 
 DOC_TYPE_MAP = {
     "journals": "journal",
     "notes": "note",
     "bookmarks": "bookmark",
     "pdfs": "pdf",
+    "images": "image",
+    "audio": "audio",
     "exports": "export",
 }
 
@@ -39,3 +44,8 @@ PROVIDER_CONTEXT_WINDOWS = {
     "gemini": 1_048_576,
     "ollama": 8_192,
 }
+
+MEDIA_TYPE_TEXT = "text"
+MEDIA_TYPE_IMAGE = "image"
+MEDIA_TYPE_AUDIO = "audio"
+MEDIA_TYPE_PDF = "pdf"
