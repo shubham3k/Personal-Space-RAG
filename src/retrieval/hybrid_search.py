@@ -12,7 +12,14 @@ class HybridSearch:
 
     def search(self, query: str, top_k: int | None = None, filters: dict | None = None) -> list[dict]:
         requested = top_k or settings.retrieval_top_k
-        dense = self.semantic.search(query, top_k=max(requested * 2, requested), media_type=filters.get("media_type") if filters else None)
+        doc_type = filters.get("doc_type") if filters else None
+        media_type = filters.get("media_type") if filters else None
+        dense = self.semantic.search(
+            query,
+            top_k=max(requested * 2, requested),
+            doc_type=doc_type,
+            media_type=media_type,
+        )
         sparse = self.keyword.search(query, top_k=max(requested * 2, requested), filters=filters)
         return reciprocal_rank_fusion(dense, sparse, top_k=requested)
 

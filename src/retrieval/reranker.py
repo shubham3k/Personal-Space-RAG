@@ -12,7 +12,7 @@ class CrossEncoderReranker:
             return results[: top_k or settings.reranker_top_k]
         try:
             model = self._get_model()
-            pairs = [(query, item["content"]) for item in results]
+            pairs = [(query, item["content"][:2048]) for item in results]
             scores = model.predict(pairs)
             reranked = []
             for item, score in zip(results, scores):
