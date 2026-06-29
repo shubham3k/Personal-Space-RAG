@@ -58,6 +58,12 @@ class VectorStore:
         self.client.delete_collection(settings.chroma_collection)
         self.collection = self.client.get_or_create_collection(name=settings.chroma_collection)
 
+    def delete_by_source_path(self, source_path: str) -> None:
+        try:
+            self.collection.delete(where={"source_path": source_path})
+        except Exception:
+            pass
+
     def _clean_metadata(self, metadata: dict) -> dict:
         clean = {}
         for key, value in metadata.items():

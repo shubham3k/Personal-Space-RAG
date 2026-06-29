@@ -71,6 +71,16 @@ class BM25Store:
     def count(self) -> int:
         return len(self.chunk_ids)
 
+    def delete_by_source_path(self, source_path: str) -> None:
+        indices_to_keep = [i for i, meta in enumerate(self.chunk_metadata) if meta.get("source_path") != source_path]
+        if len(indices_to_keep) < len(self.chunk_ids):
+            self.chunk_ids = [self.chunk_ids[i] for i in indices_to_keep]
+            self.chunk_contents = [self.chunk_contents[i] for i in indices_to_keep]
+            self.chunk_metadata = [self.chunk_metadata[i] for i in indices_to_keep]
+            self.tokenized_corpus = [self.tokenized_corpus[i] for i in indices_to_keep]
+            self._rebuild()
+            self._save()
+
     def reset(self) -> None:
         self.bm25 = None
         self.chunk_ids = []
