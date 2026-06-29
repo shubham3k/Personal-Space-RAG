@@ -21,7 +21,20 @@ class DigestAgent:
             days = 1 if digest_type == "daily" else 7 if digest_type == "weekly" else 30
             period_start = (today - timedelta(days=days - 1)).isoformat()
         query = f"{digest_type} digest from {period_start} to {period_end}: activity summary, themes, highlights, progress, anomalies"
-        contexts = self.retriever.retrieve(query, top_k=30)
+        contexts = self.retriever.retrieve(query, top_k=100)
+        
+        filtered_contexts = []
+        for item in contexts:
+            doc_date = item.get("metadata", {}).get("date")
+            if doc_date:
+                if period_start <= str(doc_date) <= period_end:
+                    filtered_contexts.append(item)
+        
+        if filtered_contexts:
+            contexts = filtered_contexts[:30]
+        else:
+            contexts = contexts[:20]
+
         result = await self.generator.generate(query, contexts)
         self.store.upsert(digest_type, period_start, period_end, result["answer"])
         return {"period_start": period_start, "period_end": period_end, **result}

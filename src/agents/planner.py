@@ -19,14 +19,18 @@ class MultiStepPlannerAgent:
         self.generator = generator or AnswerGenerator()
 
     def plan(self, query: str) -> list[PlanStep]:
+        import re
         lowered = query.lower()
-        if " vs " in lowered:
-            left, right = query.split(" vs ", 1)
-            return [PlanStep(left.strip(), []), PlanStep(right.strip(), [])]
+        if re.search(r"\bvs\b", lowered):
+            parts = re.split(r"\s+vs\s+", query, flags=re.IGNORECASE)
+            if len(parts) >= 2:
+                return [PlanStep(parts[0].strip(), []), PlanStep(parts[1].strip(), [])]
         if "compare" in lowered and " and " in lowered:
-            tail = query.lower().split("compare", 1)[1]
-            parts = [part.strip(" ?.") for part in tail.split(" and ")[:5] if part.strip()]
-            return [PlanStep(part, []) for part in parts]
+            parts_split = re.split(r"\bcompare\b", query, flags=re.IGNORECASE)
+            if len(parts_split) >= 2:
+                tail = parts_split[1]
+                parts = [part.strip(" ?.") for part in re.split(r"\s+and\s+", tail, flags=re.IGNORECASE)[:5] if part.strip()]
+                return [PlanStep(part, []) for part in parts]
         return [PlanStep(query, [])]
 
     async def run(self, query: str, top_k: int | None = None) -> dict:
