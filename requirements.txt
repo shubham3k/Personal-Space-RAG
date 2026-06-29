@@ -35,6 +35,31 @@ watchdog>=5.0.0
 tiktoken>=0.7.0
 rich>=13.8.0
 
+# v1.5 Quality Layer
+rank-bm25>=0.2.2
+diskcache>=5.6.0
+nltk>=3.9.0
+numpy>=1.26.0
+
+# v2.0 Multi-Modal
+easyocr>=1.7.0
+faster-whisper>=1.0.0
+pydub>=0.25.1
+soundfile>=0.12.0
+Pillow>=10.4.0
+imagehash>=4.3.0
+camelot-py[cv]>=0.11.0
+
+# Evaluation
+rouge-score>=0.1.2
+bert-score>=0.3.13
+aiolimiter>=1.1.0
+
+# v3.0 Agentic + Integrations
+apscheduler>=3.10.4
+cryptography>=42.0.0
+feedparser>=6.0.11
+
 # Dev / Testing
 pytest>=8.3.0
 pytest-asyncio>=0.24.0
