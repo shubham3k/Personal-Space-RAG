@@ -1,0 +1,270 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #070A13;
+  --color-surface: rgba(17, 24, 39, 0.7);
+  --color-surfaceMuted: rgba(31, 41, 55, 0.4);
+  --color-primary: #FFC174;
+  --color-secondary: #D0BCFF;
+  --color-tertiary: #54DDFC;
+  --color-onSurface: #F0E0D1;
+  --color-onSurfaceMuted: #A08E7A;
+  --color-outline: #534434;
+
+  --font-sans: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-cyber: 'Orbitron', sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-onSurface font-sans antialiased overflow-x-hidden;
+  }
+}
+
+/* Custom radial glows for cybernetic space theme */
+.portal-bg {
+  background-color: #070A13;
+  background-image: 
+    radial-gradient(ellipse at 15% 15%, rgba(245, 158, 11, 0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 85% 85%, rgba(139, 92, 246, 0.07) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 30%, rgba(6, 182, 212, 0.05) 0%, transparent 45%);
+}
+
+/* Scrollbars */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(7, 10, 19, 0.5);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 193, 116, 0.2);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 193, 116, 0.4);
+}
+
+/* Pulse keyframes for status dots */
+.dot-glow-cyan {
+  box-shadow: 0 0 10px rgba(84, 221, 252, 0.6);
+  animation: pulse-cyan 2.5s infinite;
+}
+
+.dot-glow-amber {
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.6);
+  animation: pulse-amber 2.5s infinite;
+}
+
+@keyframes pulse-cyan {
+  0%, 100% { box-shadow: 0 0 6px rgba(84, 221, 252, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(84, 221, 252, 0.8); }
+}
+
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 6px rgba(245, 158, 11, 0.4); }
+  50% { box-shadow: 0 0 16px rgba(245, 158, 11, 0.8); }
+}
+
+/* LifeOS Custom UI Components */
+.lifeos-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 99px;
+  border: 1px solid;
+}
+
+.lifeos-chip-amber {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #FFC174;
+}
+
+.lifeos-chip-cyan {
+  background: rgba(84, 221, 252, 0.08);
+  border-color: rgba(84, 221, 252, 0.3);
+  color: #54DDFC;
+}
+
+.lifeos-chip-purple {
+  background: rgba(208, 188, 255, 0.08);
+  border-color: rgba(208, 188, 255, 0.3);
+  color: #D0BCFF;
+}
+
+.lifeos-chip-error {
+  background: rgba(255, 180, 171, 0.08);
+  border-color: rgba(255, 180, 171, 0.3);
+  color: #ffb4ab;
+}
+
+.lifeos-sidebar-header {
+  padding: 1.5rem 1.2rem 1rem;
+  border-bottom: 1px solid rgba(255, 193, 116, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+.lifeos-logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.lifeos-logo-dot {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lifeos-logo-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 193, 116, 0.2);
+  border-radius: 50%;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.lifeos-logo-inner {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  background: #FFC174;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(255, 193, 116, 0.6);
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+.lifeos-logo-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: #FFC174;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.lifeos-logo-version {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: #A08E7A;
+  letter-spacing: 0.08em;
+}
+
+.lifeos-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: #A08E7A;
+  text-decoration: none;
+  transition: all 0.25s;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+}
+
+.lifeos-nav-item:hover {
+  color: #FFC174;
+  background: rgba(255, 193, 116, 0.06);
+  border-color: rgba(255, 193, 116, 0.1);
+}
+
+.lifeos-nav-item.active {
+  color: #070A13;
+  background: #FFC174;
+  border-color: #FFC174;
+  font-weight: 600;
+}
+
+.lifeos-status-bar {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: rgba(31, 41, 55, 0.4);
+  border: 1px solid rgba(83, 68, 52, 0.3);
+  border-radius: 8px;
+}
+
+.lifeos-welcome-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #F0E0D1;
+  margin: 0.25rem 0 0.5rem;
+}
+
+.lifeos-welcome-sub {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #A08E7A;
+  opacity: 0.6;
+  margin-bottom: 1.2rem;
+}
+
+/* Glass panel */
+.glass-panel {
+  background: rgba(17, 24, 39, 0.7) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02) !important;
+  position: relative;
+}
+
+/* Cybernetic animations & effects */
+.border-glow-rotate {
+  position: relative;
+  z-index: 1;
+}
+
+.border-glow-rotate::after {
+  content: '';
+  position: absolute;
+  inset: -1.5px;
+  background: conic-gradient(from var(--border-angle), #54DDFC, #FFC174, #D0BCFF, #54DDFC);
+  border-radius: inherit;
+  z-index: -1;
+  animation: rotate-border 6s linear infinite;
+}
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: true;
+  initial-value: 0turn;
+}
+
+@keyframes rotate-border {
+  0% { --border-angle: 0turn; }
+  100% { --border-angle: 1turn; }
+}
