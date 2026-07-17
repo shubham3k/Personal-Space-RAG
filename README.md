@@ -1,86 +1,110 @@
 # Personal Life OS
 
-A privacy-first local RAG system for personal documents and media. Drop Markdown, text, PDF, JSON, CSV, images, screenshots, or audio into `data/raw`, ingest them with local embeddings plus BM25 keyword search, and ask questions through FastAPI or Streamlit. LLM calls use free-tier providers in priority order: Groq, Cerebras, Gemini, then local Ollama.
+Personal Life OS is a privacy-first local RAG project for searching and querying your own documents, notes, PDFs, images, and audio.
 
-## Quick Start
+Instead of sending your personal data to a public cloud service, the project keeps documents and embeddings locally and uses a hosted LLM provider only when needed.
+
+## What this project does
+
+- Ingests personal files from `data/raw`
+- Builds local vector search and keyword search
+- Answers questions through a FastAPI backend
+- Supports multimodal data such as text, PDFs, images, and audio
+- Keeps the main knowledge index and metadata local in the workspace
+
+## Minimal setup
+
+### 1. Create and activate a virtual environment
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
+```
+
+### 2. Install dependencies
+
+```bash
 python -m pip install -r requirements.txt
+```
+
+### 3. Configure environment variables
+
+```bash
 copy .env.example .env
+```
+
+Update `.env` with at least one LLM provider key, or use Ollama locally.
+
+### 4. Initialize the local database
+
+```bash
 python scripts/setup_db.py
-python scripts/seed_sample_data.py
+```
+
+### 5. Add your documents
+
+Place files in folders like:
+
+- `data/raw/notes`
+- `data/raw/pdfs`
+- `data/raw/images`
+- `data/raw/audio`
+
+### 6. Run ingestion
+
+```bash
 python scripts/run_ingestion.py
+```
+
+### 7. Start the API
+
+```bash
 uvicorn api.main:app --reload
 ```
 
-In another terminal:
+Then open:
+
+- API docs: `http://localhost:8000/docs`
+- Health check: `http://localhost:8000/health`
+
+## Basic usage
+
+You can query the project through the API:
 
 ```bash
-streamlit run ui/app.py
+POST /query
+{
+  "query": "What do my notes say about personal knowledge?",
+  "top_k": 8
+}
 ```
 
-Open the API at `http://localhost:8000/docs` and the UI at `http://localhost:8501`.
+Or use the ingestion endpoint to add content from a folder.
 
-## Configuration
+## Project structure
 
-Set at least one cloud provider key in `.env`, or install Ollama and pull the configured model:
+- `api/` — FastAPI routes and server
+- `src/` — retrieval, orchestration, agents, and generation logic
+- `data/raw/` — source documents and media
+- `data/chroma_db/` — vector database storage
+- `data/sqlite/` — local metadata database
+- `scripts/` — setup, ingestion, and sample-data utilities
 
-```bash
-ollama pull llama3.1:8b
-ollama serve
-```
+## Notes
 
-Embeddings are always local through `sentence-transformers` using `all-MiniLM-L6-v2` by default.
+- The default embedding model is local and runs through `sentence-transformers`.
+- The app can fall back to `Ollama` for offline local inference.
+- The repository also includes a frontend web folder under `web-ui/` for UI work.
 
-## v2.0 Upgrade Notes
-
-v2.0 adds hybrid search, reranking, query caching, rate limiting, image OCR/vision descriptions, audio transcription, PDF table extraction, media previews, and a lightweight evaluation page.
-
-v3.0 adds an agentic routing layer, memory, insights, digests, entity and integration registries, timeline/correlation endpoints, and Streamlit pages for managing those systems. See `V3_UPGRADE_NOTES.txt`.
-
-After pulling or applying the v2.0 changes, run:
-
-```bash
-python -m pip install -r requirements.txt
-python scripts/setup_db.py
-python scripts/run_ingestion.py
-```
-
-Re-running ingestion is important. Existing v1 documents are skipped for vector duplication, but their chunks are backfilled into the new BM25 index.
-
-Optional local system dependencies:
-
-- `ffmpeg` for broad audio decoding through pydub/faster-whisper
-- Ghostscript for Camelot PDF table extraction
-- Tesseract only if you switch `OCR_ENGINE=tesseract`
-
-## Main Commands
+## Common commands
 
 ```bash
 python scripts/setup_db.py
-python scripts/seed_sample_data.py
 python scripts/run_ingestion.py
 uvicorn api.main:app --reload
-streamlit run ui/app.py
 pytest
 ```
 
-## Supported Files
+## Privacy model
 
-- Text: `.md`, `.markdown`, `.txt`, `.pdf`, `.json`, `.csv`
-- Images: `.png`, `.jpg`, `.jpeg`, `.webp`, `.gif`, `.bmp`, `.tiff`
-- Audio: `.mp3`, `.wav`, `.m4a`, `.ogg`, `.flac`, `.wma`, `.aac`
-
-## API
-
-- `GET /health`
-- `POST /ingest` with optional `{ "path": "data/raw/notes" }`
-- `GET /documents`
-- `POST /query` with `{ "query": "What do my notes say about local embeddings?", "top_k": 8 }`
-- `GET /conversations/{conversation_id}`
-
-## Privacy Model
-
-Documents, chunks, embeddings, metadata, and conversation history stay local in `data/`. Only the user query and retrieved context snippets are sent to the selected LLM provider. Ollama can be used as the offline fallback when configured locally.
+Your files, chunks, embeddings, and metadata stay local in the project workspace. Only the query text and selected retrieval context are sent to the configured LLM provider.
