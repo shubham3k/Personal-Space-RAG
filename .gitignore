@@ -18,3 +18,10 @@ Thumbs.db
 
 web-ui/node_modules/
 web-ui/dist/
+FEATURES_ARCHITECTURE_AND_DATA_FLOW.txt
+HOW_TO_RUN_AND_IMPLEMENT.txt
+.obsidian/
+Untitled.md
+.agents
+V2_UPGRADE_NOTES.txt
+V3_UPGRADE_NOTES.txt
