@@ -12,6 +12,15 @@ Instead of sending your personal data to a public cloud service, the project kee
 - Supports multimodal data such as text, PDFs, images, and audio
 - Keeps the main knowledge index and metadata local in the workspace
 
+## Features
+
+- Local-first personal RAG search for notes, PDFs, and media files
+- Hybrid retrieval using embeddings and BM25 keyword matching
+- FastAPI endpoints for ingestion, querying, documents, and conversation access
+- Multi-provider LLM support with Groq, Cerebras, Gemini, and Ollama fallback
+- OCR, transcription, and thumbnail/preview processing for media content
+- Agentic workflows, memory, insights, and integrations for deeper knowledge management
+
 ## Minimal setup
 
 ### 1. Create and activate a virtual environment
